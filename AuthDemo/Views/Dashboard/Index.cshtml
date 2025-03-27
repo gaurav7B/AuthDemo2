@@ -1,0 +1,631 @@
+﻿@{
+    ViewData["Title"] = "Task and Employee Management";
+}
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f6f8;
+        margin: 20px;
+        padding: 20px;
+        color: #333;
+    }
+
+    h2, h3 {
+        color: #007bff;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    .btn-success {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-right: 5px;
+    }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+    #notification-area {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    #taskPopover, #editTaskPopover {
+        background: #fff;
+        padding: 20px;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        z-index: 9999 !important;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .form-control {
+        width: calc(100% - 12px);
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .table tbody td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+
+    .mb-3 {
+        margin-bottom: 20px;
+    }
+
+    .row {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .col-md-4 {
+        flex: 1;
+    }
+
+    #taskChart {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .actions-column button {
+        margin-right: 5px;
+    }
+</style>
+
+<h2>Create Task</h2>
+<div id="notification-area" style="display: none;"></div>
+<button class="btn btn-primary" id="createTaskBtn">Create Task</button>
+
+<div id="taskPopover" style="display: none; position: absolute;">
+    <input type="hidden" id="taskId">
+    <label>Title:</label>
+    <input type="text" id="taskTitle" class="form-control" required>
+
+    <label>Description:</label>
+    <textarea id="taskDescription" class="form-control" rows="3" required></textarea>
+
+    <label>Due Date:</label>
+    <input type="date" id="taskDueDate" class="form-control" required>
+
+    <label>Priority:</label>
+    <select id="taskPriority" class="form-control">
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+    </select>
+
+    <label>Status:</label>
+    <select id="taskStatus" class="form-control">
+        <option>Pending</option>
+        <option>Completed</option>
+    </select>
+
+    <label>Assign to Employee:</label>
+    <select id="taskEmployee" class="form-control"></select>
+
+    <div style="margin-top: 15px;">
+        <button class="btn btn-success" id="submitNewTask">Submit</button>
+        <button class="btn btn-secondary" id="closePopover">Close</button>
+    </div>
+</div>
+
+<div id="editTaskPopover" style="display: none; position: absolute;">
+    <input type="hidden" id="editTaskId">
+    <label>Title:</label>
+    <input type="text" id="editTaskTitle" class="form-control" required>
+
+    <label>Description:</label>
+    <textarea id="editTaskDescription" class="form-control" rows="3" required></textarea>
+
+    <label>Due Date:</label>
+    <input type="date" id="editTaskDueDate" class="form-control" required>
+
+    <label>Priority:</label>
+    <select id="editTaskPriority" class="form-control">
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+    </select>
+
+    <label>Status:</label>
+    <select id="editTaskStatus" class="form-control">
+        <option>Pending</option>
+        <option>Completed</option>
+    </select>
+
+    <label>Assign to Employee:</label>
+    <select id="editTaskEmployee" class="form-control"></select>
+
+    <div style="margin-top: 15px;">
+        <button class="btn btn-primary" id="updateTask">Update</button>
+        <button class="btn btn-secondary" id="closeEditPopover">Close</button>
+    </div>
+</div>
+
+<h2>Task List</h2>
+<div class="mb-3">
+    <div class="row">
+        <div class="col-md-4">
+            <label for="employeeFilter">Filter by Assigned Employee:</label>
+            <select id="employeeFilter" class="form-control" onchange="filterTasks()">
+                <option value="">All Employees</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="priorityFilter">Filter by Priority:</label>
+            <select id="priorityFilter" class="form-control" onchange="filterTasks()">
+                <option value="">All Priorities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="statusFilter">Filter by Status:</label>
+            <select id="statusFilter" class="form-control" onchange="filterTasks()">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+            </select>
+        </div>
+    </div>
+</div>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned Employee</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="taskTableBody">
+    </tbody>
+</table>
+
+<h3>Tasks Per Employee</h3>
+<canvas id="taskChart"></canvas>
+
+<h2>Employee List</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+        </tr>
+    </thead>
+    <tbody id="employeeTableBody">
+    </tbody>
+</table>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchTasks();
+        fetchEmployees();
+        setDueDateRestrictions();
+
+        document.getElementById("createTaskBtn").addEventListener("click", function () {
+            document.getElementById("taskId").value = "";
+            document.getElementById("taskTitle").value = "";
+            document.getElementById("taskDescription").value = "";
+            document.getElementById("taskDueDate").value = "";
+            document.getElementById("taskPriority").value = "Low";
+            document.getElementById("taskStatus").value = "Pending";
+            document.getElementById("taskEmployee").value = "";
+
+            document.getElementById("taskPopover").style.display = "block";
+        });
+
+        document.getElementById("closePopover").addEventListener("click", function () {
+            document.getElementById("taskPopover").style.display = "none";
+        });
+
+        document.getElementById("submitNewTask").addEventListener("click", function () {
+            submitNewTask();
+        });
+
+        document.getElementById("closeEditPopover").addEventListener("click", function () {
+            document.getElementById("editTaskPopover").style.display = "none";
+        });
+
+        document.getElementById("updateTask").addEventListener("click", function () {
+            updateTask();
+        });
+    });
+
+        function updateTaskChart(tasks) {
+        const ctx = document.getElementById('taskChart').getContext('2d');
+
+        const taskCount = tasks.reduce((acc, task) => {
+            acc[task.assignedEmployeeName] = (acc[task.assignedEmployeeName] || 0) + 1;
+            return acc;
+        }, {});
+
+        const labels = Object.keys(taskCount);
+        const data = Object.values(taskCount);
+
+        if (window.taskChartInstance) {
+            window.taskChartInstance.destroy(); 
+        }
+
+        window.taskChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Tasks',
+                    data: data,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+
+    function setDueDateRestrictions() {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const tomorrowFormatted = tomorrow.toISOString().split('T')[0];
+
+        const taskDueDate = document.getElementById("taskDueDate");
+        const editTaskDueDate = document.getElementById("editTaskDueDate");
+
+        if (taskDueDate) {
+            taskDueDate.setAttribute("min", tomorrowFormatted);
+        }
+        if (editTaskDueDate) {
+            editTaskDueDate.setAttribute("min", tomorrowFormatted);
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const notificationArea = document.getElementById('notification-area');
+        notificationArea.textContent = message;
+        notificationArea.className = `alert alert-${type}`; 
+        notificationArea.style.display = 'block';
+
+        setTimeout(() => {
+            notificationArea.style.display = 'none';
+        }, 3000);
+    }
+
+    function fetchTasks() {
+        fetch("/api/tasks")
+            .then(response => response.json())
+            .then(data => {
+                renderTaskTable(data); 
+                updateTaskChart(data);
+            })
+            .catch(error => console.error("Error fetching tasks:", error));
+    }
+
+    function renderTaskTable(tasks) {
+        let tableBody = document.getElementById("taskTableBody");
+        tableBody.innerHTML = "";
+
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0); 
+
+        tasks.forEach(task => {
+            const taskDueDate = new Date(task.dueDate);
+            const isOverdue = taskDueDate < currentDate;
+            const rowClass = isOverdue ? 'table-danger' : ''; 
+
+            let row = `<tr class="${rowClass}">
+                                    <td>${task.id}</td>
+                                    <td>${task.title}</td>
+                                    <td>${task.description}</td>
+                                    <td>${new Date(task.dueDate).toLocaleDateString()}</td>
+                                    <td>${task.priority}</td>
+                                    <td>${task.status}</td>
+                                    <td>${task.assignedEmployeeName}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning edit-task-btn" data-task-id="${task.id}">Edit</button>
+                                        <button class="btn btn-sm btn-danger delete-task-btn" data-task-id="${task.id}">Delete</button>
+                                    </td>
+                                </tr>`;
+            tableBody.innerHTML += row;
+        });
+
+        document.querySelectorAll(".edit-task-btn").forEach(button => {
+            button.addEventListener("click", function (event) {
+                const taskId = this.dataset.taskId;
+                openEditPopover(taskId, event);
+            });
+        });
+
+        document.querySelectorAll(".delete-task-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const taskId = this.dataset.taskId;
+                deleteTask(taskId);
+            });
+        });
+    }
+
+    function deleteTask(taskId) {
+        fetch(`/api/tasks/${taskId}`, {
+            method: "DELETE"
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification("Task Deleted Successfully", 'success');
+                fetchTasks(); // Refresh task list
+            } else {
+                showNotification("Failed to delete task", 'danger');
+            }
+        })
+        .catch(error => {
+            console.error("Error deleting task:", error);
+            showNotification("An unexpected error occurred while deleting the task.", 'danger');
+        });
+    }
+
+    function fetchEmployees() {
+        fetch("/api/employees")
+            .then(response => response.json())
+            .then(data => {
+                let employeeTableBody = document.getElementById("employeeTableBody");
+                let taskEmployeeDropdown = document.getElementById("taskEmployee");
+                let editTaskEmployeeDropdown = document.getElementById("editTaskEmployee");
+                let employeeFilterDropdown = document.getElementById("employeeFilter");
+
+                employeeTableBody.innerHTML = "";
+                taskEmployeeDropdown.innerHTML = "<option value=''>Select Employee</option>";
+                editTaskEmployeeDropdown.innerHTML = "<option value=''>Select Employee</option>";
+                employeeFilterDropdown.innerHTML = "<option value=''>All Employees</option>";
+
+                data.forEach(emp => {
+                    let filterOption = `<option value="${emp.name}">${emp.name}</option>`;
+                    employeeFilterDropdown.innerHTML += filterOption;
+
+                    let row = `<tr>
+                                        <td>${emp.id}</td>
+                                        <td>${emp.name}</td>
+                                        <td>${emp.email}</td>
+                                        <td>${emp.department}</td>
+                                    </tr>`;
+                    employeeTableBody.innerHTML += row;
+
+                    let createOption = `<option value="${emp.id}" data-name="${emp.name}" data-email="${emp.email}" data-dept="${emp.department}">
+                                                                                    ${emp.name}
+                                                                                </option>`;
+                    taskEmployeeDropdown.innerHTML += createOption;
+                    editTaskEmployeeDropdown.innerHTML += createOption;
+                });
+            })
+            .catch(error => console.error("Error fetching employees:", error));
+    }
+
+    function openEditPopover(taskId, event) {
+        fetch(`/api/tasks/${taskId}`)
+            .then(response => response.json())
+            .then(task => {
+                document.getElementById("editTaskId").value = task.id;
+                document.getElementById("editTaskTitle").value = task.title;
+                document.getElementById("editTaskDescription").value = task.description;
+                document.getElementById("editTaskDueDate").value = new Date(task.dueDate).toISOString().split('T')[0];
+                document.getElementById("editTaskPriority").value = task.priority;
+                document.getElementById("editTaskStatus").value = task.status;
+                document.getElementById("editTaskEmployee").value = task.assignedEmployeeId || "";
+
+                const editPopover = document.getElementById("editTaskPopover");
+                editPopover.style.display = "block";
+
+                const buttonRect = event.target.getBoundingClientRect();
+                editPopover.style.top = `${buttonRect.bottom + window.scrollY}px`;
+                editPopover.style.left = `${buttonRect.left + window.scrollX}px`;
+            })
+            .catch(error => console.error("Error fetching task for edit:", error));
+    }
+
+    function submitNewTask() {
+        let selectedEmployee = document.getElementById("taskEmployee");
+        let empId = selectedEmployee.value;
+        let empName = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.name;
+        let empEmail = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.email;
+        let empDept = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.dept;
+
+        let task = {
+            title: document.getElementById("taskTitle").value,
+            description: document.getElementById("taskDescription").value,
+            dueDate: document.getElementById("taskDueDate").value,
+            priority: document.getElementById("taskPriority").value,
+            status: document.getElementById("taskStatus").value,
+            assignedEmployeeId: empId || null,
+            assignedEmployeeName: empName || null,
+            assignedEmployeeEmail: empEmail || null,
+            assignedEmployeeDepartment: empDept || null
+        };
+
+        fetch("/api/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task)
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification("Task Created Successfully", 'success');
+                document.getElementById("taskPopover").style.display = "none";
+                fetchTasks(); // Refresh task list
+            } else {
+                console.error("Error creating task:", response);
+                showNotification("Failed to create task.", 'danger');
+            }
+        })
+        .catch(error => {
+            console.error("Error creating task:", error);
+            showNotification("An unexpected error occurred while creating the task.", 'danger');
+        });
+    }
+
+    function updateTask() {
+        let selectedEmployee = document.getElementById("editTaskEmployee");
+        let empId = selectedEmployee.value;
+        let empName = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.name;
+        let empEmail = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.email;
+        let empDept = selectedEmployee.options[selectedEmployee.selectedIndex]?.dataset?.dept;
+        let taskId = document.getElementById("editTaskId").value;
+
+        let taskData = {
+            id: parseInt(taskId),
+            title: document.getElementById("editTaskTitle").value,
+            description: document.getElementById("editTaskDescription").value,
+            dueDate: document.getElementById("editTaskDueDate").value,
+            priority: document.getElementById("editTaskPriority").value,
+            status: document.getElementById("editTaskStatus").value,
+            assignedEmployeeId: empId || null,
+            assignedEmployeeName: empName || null,
+            assignedEmployeeEmail: empEmail || null,
+            assignedEmployeeDepartment: empDept || null
+        };
+
+        fetch(`/api/tasks/${taskId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(taskData)
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification("Task Updated Successfully", 'success');
+                document.getElementById("editTaskPopover").style.display = "none";
+                fetchTasks();
+            } else {
+                console.error("Error updating task:", response);
+                showNotification("Failed to update task.", 'danger');
+            }
+        })
+        .catch(error => {
+            console.error("Error updating task:", error);
+            showNotification("An unexpected error occurred while updating the task.", 'danger');
+        });
+    }
+
+    function filterTasks() {
+        let selectedEmployee = document.getElementById("employeeFilter").value;
+        let selectedPriority = document.getElementById("priorityFilter").value;
+        let selectedStatus = document.getElementById("statusFilter").value;
+
+        fetch("/api/tasks")
+            .then(response => response.json())
+            .then(data => {
+                let filteredTasks = data;
+
+                if (selectedEmployee) {
+                    filteredTasks = filteredTasks.filter(task => task.assignedEmployeeName === selectedEmployee);
+                }
+
+                if (selectedPriority) {
+                    filteredTasks = filteredTasks.filter(task => task.priority === selectedPriority);
+                }
+
+                if (selectedStatus) {
+                    filteredTasks = filteredTasks.filter(task => task.status === selectedStatus);
+                }
+
+                renderTaskTable(filteredTasks);
+            })
+            .catch(error => console.error("Error fetching tasks:", error));
+    }
+</script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">

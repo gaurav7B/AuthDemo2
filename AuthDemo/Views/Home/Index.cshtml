@@ -1,0 +1,137 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Registration Section -->
+        <div class="col-md-6">
+            <div class="card p-4 shadow">
+                <h2 class="text-center">Register</h2>
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                </form>
+                <div id="registerMessage" class="mt-2 text-center"></div>
+
+                <!-- Registration Loader -->
+                <div id="registerLoader" class="text-center mt-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Registering...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="col-md-6">
+            <div class="card p-4 shadow">
+                <h2 class="text-center">Login</h2>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" name="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" name="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Login</button>
+                </form>
+                <div id="loginMessage" class="mt-2 text-center"></div>
+
+                <!-- Login Loader -->
+                <div id="loginLoader" class="text-center mt-3" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Logging in...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery for AJAX requests -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Register user
+        $("#registerForm").submit(function (event) {
+            event.preventDefault();
+
+            // Show loader and disable button
+            $("#registerLoader").show();
+            $("#registerForm button").prop("disabled", true);
+
+            var formData = {
+                Name: $("#name").val(),
+                Email: $("#email").val(),
+                Password: $("#password").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/auth/register",
+                data: JSON.stringify(formData),
+                contentType: "application/json",
+                success: function (response) {
+                    $("#registerMessage").html(`<div class="alert alert-success">${response}</div>`);
+                },
+                error: function (xhr) {
+                    var errorMessage = xhr.responseJSON ? xhr.responseJSON[0].description : "Registration failed";
+                    $("#registerMessage").html(`<div class="alert alert-danger">${errorMessage}</div>`);
+                },
+                complete: function () {
+                    // Hide loader and enable button
+                    $("#registerLoader").hide();
+                    $("#registerForm button").prop("disabled", false);
+                }
+            });
+        });
+
+        // Login user
+        $("#loginForm").submit(function (event) {
+            event.preventDefault();
+
+            // Show loader and disable button
+            $("#loginLoader").show();
+            $("#loginForm button").prop("disabled", true);
+
+            var formData = {
+                Email: $("#loginEmail").val(),
+                Password: $("#loginPassword").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/api/auth/login",
+                data: JSON.stringify(formData),
+                contentType: "application/json",
+                success: function (response) {
+                    $("#loginMessage").html(`<div class="alert alert-success">Login successful</div>`);
+                    localStorage.setItem("token", response.token);
+                    window.location.href = "/Dashboard/Index"; // Redirect to the dashboard
+                },
+                error: function () {
+                    $("#loginMessage").html(`<div class="alert alert-danger">Invalid credentials</div>`);
+                },
+                complete: function () {
+                    // Hide loader and enable button
+                    $("#loginLoader").hide();
+                    $("#loginForm button").prop("disabled", false);
+                }
+            });
+        });
+    });
+</script>
