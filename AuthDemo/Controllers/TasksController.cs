@@ -4,6 +4,7 @@ using AuthDemo.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
 using Task = AuthDemo.Models.Task;
 
 namespace AuthDemo.Controllers
@@ -23,19 +24,35 @@ namespace AuthDemo.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Task>>> GetTasks()
         {
-            return await _context.Tasks.ToListAsync();
+            try
+            {
+                return await _context.Tasks.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, "An error occurred while retrieving tasks.");
+            }
         }
 
         // GET: api/tasks/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Task>> GetTask(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null)
+            try
             {
-                return NotFound();
+                var task = await _context.Tasks.FindAsync(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+                return task;
             }
-            return task;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, "An error occurred while retrieving the task.");
+            }
         }
 
         // POST: api/tasks
@@ -46,16 +63,14 @@ namespace AuthDemo.Controllers
             {
                 _context.Tasks.Add(task);
                 await _context.SaveChangesAsync();
-
                 return Ok();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return StatusCode(500, ex);
+                return StatusCode(500, "An error occurred while creating the task.");
             }
         }
-
 
         // PUT: api/tasks/5
         [HttpPut("{id}")]
@@ -84,24 +99,35 @@ namespace AuthDemo.Controllers
                     throw;
                 }
             }
-
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, "An error occurred while updating the task.");
+            }
         }
 
         // DELETE: api/tasks/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTask(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null)
+            try
             {
-                return NotFound();
+                var task = await _context.Tasks.FindAsync(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Tasks.Remove(task);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.Tasks.Remove(task);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, "An error occurred while deleting the task.");
+            }
         }
     }
 }
-

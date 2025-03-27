@@ -22,31 +22,50 @@ namespace AuthDemo.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
         {
-            return await _context.Employees.ToListAsync();
+            try
+            {
+                return await _context.Employees.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // GET: api/Employees/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-
-            if (employee == null)
+            try
             {
-                return NotFound();
+                var employee = await _context.Employees.FindAsync(id);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+                return employee;
             }
-
-            return employee;
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // POST: api/Employees
         [HttpPost]
         public async Task<ActionResult<Employee>> PostEmployee(Employee employee)
         {
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Employees.Add(employee);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetEmployee", new { id = employee.Id }, employee);
+                return CreatedAtAction("GetEmployee", new { id = employee.Id }, employee);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/Employees/5
@@ -55,7 +74,7 @@ namespace AuthDemo.Controllers
         {
             if (id != employee.Id)
             {
-                return BadRequest();
+                return BadRequest("Employee ID mismatch");
             }
 
             _context.Entry(employee).State = EntityState.Modified;
@@ -75,6 +94,10 @@ namespace AuthDemo.Controllers
                     throw;
                 }
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
 
             return NoContent();
         }
@@ -83,21 +106,35 @@ namespace AuthDemo.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null)
+            try
             {
-                return NotFound();
+                var employee = await _context.Employees.FindAsync(id);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Employees.Remove(employee);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         private bool EmployeeExists(int id)
         {
-            return _context.Employees.Any(e => e.Id == id);
+            try
+            {
+                return _context.Employees.Any(e => e.Id == id);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

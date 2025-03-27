@@ -26,11 +26,26 @@ namespace AuthDemo.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Name = model.Name };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-            return Ok("User registered successfully");
+            try
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    Name = model.Name
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+
+                return Ok("User registered successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPost("login")]
@@ -61,7 +76,7 @@ namespace AuthDemo.Controllers
             catch(Exception ex)
             {
                 Console.WriteLine(ex);
-                return StatusCode(500, "An unexpected error occurred.");
+                return StatusCode(500, ex);
             }
 
         }
